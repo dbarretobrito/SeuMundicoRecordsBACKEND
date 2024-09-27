@@ -29,11 +29,11 @@ app.post('/calculate-shipping', async (req, res) => {
     const cacheKey = `${from}-${to}-${JSON.stringify(pkg)}`;
     
     // Verifica se o resultado já está no cache
-    const cachedResult = myCache.get(cacheKey);
-    if (cachedResult) {
-        console.log('Retornando resultado do cache');
-        return res.json({ pacPrice: cachedResult });
-    }
+    // const cachedResult = myCache.get(cacheKey);
+    // if (cachedResult) {
+    //     console.log('Retornando resultado do cache');
+    //     return res.json({ pacPrice: cachedResult });
+    // }
     
     console.log('Chamando a API do Melhor Envio'); // Log quando a API for chamada
 
