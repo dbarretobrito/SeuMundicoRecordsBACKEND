@@ -11,13 +11,6 @@ const myCache = new NodeCache({ stdTTL: 600 }); // TTL de 600 segundos (10 minut
 app.use(cors());
 app.use(express.json());
 
-// // Middleware para adicionar o cabeçalho Content-Language
-// app.use((req, res, next) => {
-//     res.header('Content-Language', 'pt-BR');
-//     res.header('Content-Type', 'text/html; charset=utf-8'); // Adicionando o cabeçalho Content-Type
-//     next();
-// });
-
 app.post('/calculate-shipping', async (req, res) => {
     const { from, to, package: pkg } = req.body;
 
@@ -29,11 +22,11 @@ app.post('/calculate-shipping', async (req, res) => {
     const cacheKey = `${from}-${to}-${JSON.stringify(pkg)}`;
     
     // Verifica se o resultado já está no cache
-    // const cachedResult = myCache.get(cacheKey);
-    // if (cachedResult) {
-    //     console.log('Retornando resultado do cache');
-    //     return res.json({ pacPrice: cachedResult });
-    // }
+    const cachedResult = myCache.get(cacheKey);
+    if (cachedResult) {
+        console.log('Retornando resultado do cache');
+        return res.json({ pacPrice: cachedResult });
+    }
     
     console.log('Chamando a API do Melhor Envio'); // Log quando a API for chamada
 
@@ -55,7 +48,7 @@ app.post('/calculate-shipping', async (req, res) => {
                 }
             }
         );
-        console.log(response.data);
+        console.log('Resposta da API do Melhor Envio:', response.data); // Log da resposta
 
         if (Array.isArray(response.data)) {
             const pacPriceObject = response.data.find(service => service.name === 'PAC');
