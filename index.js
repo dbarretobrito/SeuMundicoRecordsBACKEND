@@ -11,12 +11,12 @@ const myCache = new NodeCache({ stdTTL: 600 }); // TTL de 600 segundos (10 minut
 app.use(cors());
 app.use(express.json());
 
-// Middleware para adicionar o cabeçalho Content-Language
-app.use((req, res, next) => {
-    res.header('Content-Language', 'pt-BR');
-    res.header('Content-Type', 'text/html; charset=utf-8'); // Adicionando o cabeçalho Content-Type
-    next();
-});
+// // Middleware para adicionar o cabeçalho Content-Language
+// app.use((req, res, next) => {
+//     res.header('Content-Language', 'pt-BR');
+//     res.header('Content-Type', 'text/html; charset=utf-8'); // Adicionando o cabeçalho Content-Type
+//     next();
+// });
 
 app.post('/calculate-shipping', async (req, res) => {
     const { from, to, package: pkg } = req.body;
