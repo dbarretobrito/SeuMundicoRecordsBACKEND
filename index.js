@@ -14,6 +14,7 @@ app.use(express.json());
 // Middleware para adicionar o cabeçalho Content-Language
 app.use((req, res, next) => {
     res.header('Content-Language', 'pt-BR');
+    res.header('Content-Type', 'text/html; charset=utf-8'); // Adicionando o cabeçalho Content-Type
     next();
 });
 
