@@ -55,6 +55,7 @@ app.post('/calculate-shipping', async (req, res) => {
                 }
             }
         );
+        console.log(response.data);
 
         if (Array.isArray(response.data)) {
             const pacPriceObject = response.data.find(service => service.name === 'PAC');
