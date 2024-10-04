@@ -1,49 +1,73 @@
+
+require('dotenv').config();
 const express = require('express');
+const axios = require('axios');
 const cors = require('cors');
-const { calcularPrecoPrazo } = require('correios-brasil');
+const NodeCache = require('node-cache');
 
 const app = express();
+const port = process.env.PORT || 3001;
+const myCache = new NodeCache({ stdTTL: 600 }); // TTL de 600 segundos (10 minutos)
+
 app.use(cors());
 app.use(express.json());
 
-app.post('/calculate-shipping-correios', async (req, res) => {
-    const { to, package: pkg } = req.body;
+app.post('/calculate-shipping', async (req, res) => {
+    const { from, to, package: pkg } = req.body;
 
-    if (!to || !pkg) {
+    if (!from || !to || !pkg) {
         return res.status(400).json({ error: 'Dados de requisição ausentes' });
     }
 
-    const args = {
-        sCepOrigem: '90035121',  // CEP de origem
-        sCepDestino: to.postal_code,  // CEP de destino
-        nVlPeso: pkg.weight.toString(),  // Peso do pacote
-        nCdFormato: '1',  // Formato da encomenda (caixa/pacote)
-        nVlComprimento: pkg.length.toString(),
-        nVlAltura: pkg.height.toString(),
-        nVlLargura: pkg.width.toString(),
-        nCdServico: ['04510'],  // Código do serviço PAC
-        nVlDiametro: '0',
-        nVlValorDeclarado: '0',  // Sem valor declarado
-        sCdMaoPropria: 'N',
-        sCdAvisoRecebimento: 'N',
-    };
+    // Gera uma chave única para o cache com base nos dados da requisição
+    const cacheKey = `${from}-${to}-${JSON.stringify(pkg)}`;
+    
+    // Verifica se o resultado já está no cache
+    // const cachedResult = myCache.get(cacheKey);
+    // if (cachedResult) {
+    //     console.log('Retornando resultado do cache');
+    //     return res.json({ pacPrice: cachedResult });
+    // }
+    
+    console.log('Chamando a API do Melhor Envio'); // Log quando a API for chamada
 
     try {
-        const result = await calcularPrecoPrazo(args);
-        console.log('Resultado da API dos Correios:', result);
-        
-        if (result && result[0] && result[0].Valor) {
-            res.json({ pacPrice: result[0].Valor });
+        const response = await axios.post(
+            'https://www.melhorenvio.com.br/api/v2/me/shipment/calculate',
+            {
+                from,
+                to,
+                package: pkg,
+                options: {
+                    services: '1' // PAC
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.MELHOR_ENVIO_API_KEY}`,
+                    'User-Agent': 'Aplicação dbarretobrito@gmail.com'
+                }
+            }
+        );
+        console.log('Resposta da API do Melhor Envio:', response.data); // Log da resposta
+
+        if (Array.isArray(response.data)) {
+            const pacPriceObject = response.data.find(service => service.name === 'PAC');
+            if (pacPriceObject) {
+                myCache.set(cacheKey, pacPriceObject.price); // Armazena no cache
+                return res.json({ pacPrice: pacPriceObject.price });
+            } else {
+                return res.status(404).json({ error: 'Serviço PAC não encontrado' });
+            }
         } else {
-            res.status(500).json({ error: 'Erro ao calcular o frete' });
+            return res.status(500).json({ error: 'Formato de resposta inválido' });
         }
     } catch (error) {
-        console.error('Erro ao calcular o frete:', error.message || error);
-        res.status(500).json({ error: 'Erro ao calcular o frete pelos Correios' });
+        console.error('Erro no backend:', error.message || error);
+        return res.status(500).json({ error: 'Erro ao calcular o frete' });
     }
 });
 
-const port = process.env.PORT || 3001;
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
 });
