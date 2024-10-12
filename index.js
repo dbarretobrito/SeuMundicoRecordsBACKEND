@@ -19,15 +19,15 @@ app.post('/calculate-shipping', async (req, res) => {
         return res.status(400).json({ error: 'Dados de requisição ausentes' });
     }
 
-    // Gera uma chave única para o cache com base nos dados da requisição
+    // Gera uma chave única para o cache com base nos dados da requisição'
     const cacheKey = `${from}-${to}-${JSON.stringify(pkg)}`;
     
-    // Verifica se o resultado já está no cache
-    // const cachedResult = myCache.get(cacheKey);
-    // if (cachedResult) {
-    //     console.log('Retornando resultado do cache');
-    //     return res.json({ pacPrice: cachedResult });
-    // }
+    //Verifica se o resultado já está no cache
+    const cachedResult = myCache.get(cacheKey);
+    if (cachedResult) {
+        console.log('Retornando resultado do cache');
+        return res.json({ pacPrice: cachedResult });
+    }
     
     console.log('Chamando a API do Melhor Envio'); // Log quando a API for chamada
 
